@@ -1,0 +1,1 @@
+# reviewdog-action-remark-lint
