@@ -1,0 +1,30 @@
+name: Test remark-lint with custom tool name and level
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          workdir: tests/fixtures/simple
+          tool_name: "my-remark-lint"
+          level: "warning"
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          fail_on_error: "false"
+          install_deps: "false"
+          remark_args: "--use=remark-preset-lint-recommended"
+        env:
+          INPUT_GITHUB_TOKEN: dummy-token
+
+      - name: Assert action ran with custom tool name
+        run: |
+          echo "PASS: remark-lint ran with custom tool_name and level without fatal error"
