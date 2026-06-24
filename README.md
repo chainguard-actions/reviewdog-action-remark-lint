@@ -8,6 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
+| v5.16.2 | [`v5.16.2`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/tree/v5.16.2) | [`850c910`](https://github.com/reviewdog/action-remark-lint/commit/850c910ecaa4996457024ea4c3be0d1a4fcfe730) |
 | v5.17.0 | [`v5.17.0`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/tree/v5.17.0) | [`0ffbd16`](https://github.com/reviewdog/action-remark-lint/commit/0ffbd16536f125c00b3d7c9c32d4a5be51b51744) |
 | v5.18.0 | [`v5.18.0`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/tree/v5.18.0) | [`82225f7`](https://github.com/reviewdog/action-remark-lint/commit/82225f7db5b4a3caaca3052733b6800fa7d109b0) |
 
