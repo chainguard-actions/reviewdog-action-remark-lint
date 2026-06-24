@@ -1,0 +1,33 @@
+name: Test remark-lint with explicit remark_args
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create a test markdown directory without config file
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/md-args"
+          cat > "${GITHUB_WORKSPACE}/md-args/doc.md" << 'EOF'
+          # Documentation
+
+          This is a valid markdown document.
+
+          ## Overview
+
+          Content goes here.
+          EOF
+      - id: action
+        uses: .
+        with:
+          workdir: md-args
+          remark_args: "--use=remark-preset-lint-recommended"
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          install_deps: "false"
+          github_token: ${{ github.token }}
+      - name: Assert action completed successfully with explicit remark_args
+        run: |
+          echo "PASS: remark-lint action completed with explicit remark_args"

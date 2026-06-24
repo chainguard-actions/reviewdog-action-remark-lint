@@ -1,0 +1,29 @@
+name: Test remark-lint fail_level behavior
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create markdown with lint issues in a subdirectory
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/md-issues"
+          printf '## Not a first heading\n\nsome text\n\n## Duplicate heading\n\nsome text\n\n## Duplicate heading\n' > "${GITHUB_WORKSPACE}/md-issues/bad.md"
+          cat > "${GITHUB_WORKSPACE}/md-issues/.remarkrc.json" << 'EOF'
+          {
+            "plugins": ["remark-preset-lint-recommended"]
+          }
+          EOF
+      - id: action
+        uses: .
+        with:
+          workdir: md-issues
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          install_deps: "false"
+          github_token: ${{ github.token }}
+      - name: Assert action completed (fail_level=none means always exit 0)
+        run: |
+          echo "PASS: action exited 0 as expected with fail_level=none even with lint issues"
