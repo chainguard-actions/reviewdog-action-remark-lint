@@ -1,0 +1,36 @@
+name: Test basic remark-lint usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a valid markdown file for linting
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/md-test"
+          cat > "$GITHUB_WORKSPACE/md-test/README.md" <<'EOF'
+          # Hello World
+
+          This is a valid markdown file.
+
+          ## Section
+
+          Some content here.
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          workdir: md-test
+          install_deps: "false"
+          remark_args: "--use=remark-preset-lint-recommended"
+          reporter: "local"
+          filter_mode: "nofilter"
+          fail_level: "none"
+          github_token: ${{ github.token }}
+
+      - name: Assert action completed successfully
+        run: |
+          echo "PASS: remark-lint action completed without error"

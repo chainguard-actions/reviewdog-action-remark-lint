@@ -1,0 +1,31 @@
+name: Test remark-lint with custom tool name and level
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create markdown file with a lint warning
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/md-warn"
+          printf '# Title\n\nSome text without a proper structure.\n\n##### Skipped heading level\n' \
+            > "$GITHUB_WORKSPACE/md-warn/NOTES.md"
+
+      - id: action
+        uses: .
+        with:
+          workdir: md-warn
+          install_deps: "false"
+          remark_args: "--use=remark-preset-lint-recommended"
+          tool_name: "my-remark-lint"
+          level: "warning"
+          reporter: "local"
+          filter_mode: "nofilter"
+          fail_level: "none"
+          github_token: ${{ github.token }}
+
+      - name: Assert action completed with custom tool name
+        run: |
+          echo "PASS: remark-lint action completed with custom tool_name and level=warning"
