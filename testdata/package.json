@@ -1,0 +1,39 @@
+{
+  "name": "action-remark-lint-testdata",
+  "version": "1.0.0",
+  "description": "Package that contains testdata for the testing the action-remark-lint github action.",
+  "keywords": [
+    "github",
+    "action",
+    "test"
+  ],
+  "homepage": "https://github.com/reviewdog/action-remark-lint#readme",
+  "bugs": {
+    "url": "https://github.com/reviewdog/action-remark-lint/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reviewdog/action-remark-lint.git"
+  },
+  "license": "ISC",
+  "author": "Rick Staa",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "remarkConfig": {
+    "plugins": [
+      "remark-lint-emphasis-marker",
+      "remark-lint-strong-marker"
+    ],
+    "settings": {
+      "emphasis": "*",
+      "strong": "*"
+    }
+  },
+  "dependencies": {
+    "remark-lint-list-item-indent": "^4.0.0",
+    "remark-preset-lint-recommended": "^7.0.0",
+    "sort-package-json": "^2.0.0"
+  }
+}

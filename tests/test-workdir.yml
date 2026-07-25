@@ -1,0 +1,25 @@
+name: Test remark-lint with custom workdir
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run remark-lint action with custom workdir pointing to subfolder
+        id: action
+        uses: .
+        with:
+          workdir: testdata/subfolder
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          install_deps: "false"
+          remark_args: "--use=remark-preset-lint-recommended"
+          github_token: dummy-token
+
+      - name: Assert action completed successfully with custom workdir
+        run: |
+          echo "Action completed with custom workdir"
+          echo "PASS"

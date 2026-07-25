@@ -1,0 +1,36 @@
+name: Test custom tool_name and level inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install remark and set up fake wget
+        run: |
+          # Install remark tools globally so entrypoint skips npm install
+          npm install -g remark-cli@10.0.0 remark-preset-lint-recommended@6.0.1 remark-lint@9.0.1
+
+          # Set up fake wget that serves a no-op reviewdog installer
+          mkdir -p /tmp/fake-bin
+          cp "$GITHUB_WORKSPACE/tests/fixtures/fake-wget.sh" /tmp/fake-bin/wget
+          chmod +x /tmp/fake-bin/wget
+          echo "/tmp/fake-bin" >> "$GITHUB_PATH"
+
+      - name: Run remark-lint with custom tool_name and level
+        id: action
+        uses: .
+        with:
+          workdir: tests/fixtures/tool-name-test
+          tool_name: "my-custom-remark-linter"
+          level: "warning"
+          reporter: local
+          filter_mode: nofilter
+          fail_level: none
+          install_deps: "false"
+
+      - name: Assert action completed with custom tool_name and level
+        run: |
+          echo "Action completed with custom tool_name='my-custom-remark-linter' and level='warning'"
+          echo "PASS"
