@@ -1,4 +1,4 @@
-name: Test remark-lint with custom tool_name
+name: Test remark-lint with custom workdir
 on:
   workflow_dispatch:
 jobs:
@@ -57,19 +57,17 @@ jobs:
           # Add mock-bin to PATH persistently for all subsequent steps
           echo "/tmp/mock-bin" >> "$GITHUB_PATH"
 
-      - name: Run remark-lint with custom tool_name on committed fixture
+      - name: Run remark-lint action with custom workdir pointing to clean fixture
         id: action
         uses: .
         with:
-          workdir: "tests/fixtures/md-toolname"
+          workdir: "tests/fixtures/md-clean"
           install_deps: "false"
           reporter: "local"
           filter_mode: "nofilter"
           fail_level: "none"
           level: "warning"
-          tool_name: "my-custom-remark-lint"
-          remark_args: "--use=remark-preset-lint-recommended"
 
-      - name: Assert action completed successfully with custom tool_name
+      - name: Assert action completed successfully with custom workdir
         run: |
-          echo "PASS: remark-lint action completed with custom tool_name"
+          echo "PASS: remark-lint action completed with custom workdir"

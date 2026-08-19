@@ -10,9 +10,9 @@ export REVIEWDOG_GITHUB_API_TOKEN="${INPUT_GITHUB_TOKEN}"
 export REVIEWDOG_VERSION=v0.20.3
 
 echo "[action-remark-lint] Installing reviewdog..."
-wget -O /tmp/reviewdog_install.sh -q https://raw.githubusercontent.com/reviewdog/reviewdog/fd59714416d6d9a1c0692d872e38e7f8448df4fc/install.sh
-sh /tmp/reviewdog_install.sh -b /tmp "${REVIEWDOG_VERSION}"
-rm /tmp/reviewdog_install.sh
+wget -O /tmp/reviewdog-install.sh -q https://raw.githubusercontent.com/reviewdog/reviewdog/fd59714416d6d9a1c0692d872e38e7f8448df4fc/install.sh
+sh /tmp/reviewdog-install.sh -b /tmp "${REVIEWDOG_VERSION}"
+rm /tmp/reviewdog-install.sh
 
 # Install remark and remark-lint if not yet present
 if [[ "$(which remark)" == "" || "$(npm ls -g 2> /dev/null | grep remark-preset-lint-recommended)" == "" || "$(npm ls -g 2> /dev/null | grep remark-lint)" == "" ]]; then
@@ -37,14 +37,21 @@ if ! compgen -G .remarkrc* > /dev/null; then
   INPUT_REMARK_ARGS=${INPUT_REMARK_ARGS:=--use=remark-preset-lint-recommended}
 fi
 
+# Build remark args array from space-separated INPUT_REMARK_ARGS
+remark_args=()
+if [[ -n "${INPUT_REMARK_ARGS}" ]]; then
+  IFS=' ' read -r -a remark_args <<< "${INPUT_REMARK_ARGS}"
+fi
+
+# Build reviewdog flags array from space-separated INPUT_REVIEWDOG_FLAGS
+reviewdog_flags=()
+if [[ -n "${INPUT_REVIEWDOG_FLAGS}" ]]; then
+  IFS=' ' read -r -a reviewdog_flags <<< "${INPUT_REVIEWDOG_FLAGS}"
+fi
+
 # NOTE: ${VAR,,} Is bash 4.0 syntax to make strings lowercase.
 exit_val="0"
 echo "[action-remark-lint] Checking markdown code with the remark-lint linter and reviewdog..."
-
-# Split user-supplied args into arrays to avoid unquoted shell expansion injection
-read -ra remark_args <<< "${INPUT_REMARK_ARGS}"
-read -ra reviewdog_flags <<< "${INPUT_REVIEWDOG_FLAGS}"
-
 remark . "${remark_args[@]}" 2>&1 |
   sed 's/\x1b\[[0-9;]*m//g' | # Removes ansi codes see https://github.com/reviewdog/errorformat/issues/51
   /tmp/reviewdog -f=remark-lint \

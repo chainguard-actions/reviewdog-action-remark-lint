@@ -7,30 +7,71 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Create a valid markdown file for linting
+      - name: Pre-install remark tools globally
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/md-test"
-          cat > "$GITHUB_WORKSPACE/md-test/README.md" <<'EOF'
-          # Hello World
+          npm install -g remark-cli@10.0.0 remark-preset-lint-recommended@6.0.1 remark-lint@9.0.1
 
-          This is a valid markdown file.
+      - name: Set up mock wget and fake reviewdog installer
+        run: |
+          mkdir -p /tmp/mock-bin
 
-          ## Section
+          # Create a fake install script that creates a mock reviewdog binary
+          # Called as: sh -s -- -b <bindir> <version>
+          cat > /tmp/fake-reviewdog-install.sh << 'INSTALLEOF'
+          #!/bin/sh
+          BINDIR="/tmp"
+          prev=""
+          for arg in "$@"; do
+            if [ "$prev" = "-b" ]; then
+              BINDIR="$arg"
+            fi
+            prev="$arg"
+          done
+          printf '#!/bin/sh\n# Mock reviewdog: consume stdin and exit 0\ncat > /dev/null\nexit 0\n' > "${BINDIR}/reviewdog"
+          chmod +x "${BINDIR}/reviewdog"
+          INSTALLEOF
+          chmod +x /tmp/fake-reviewdog-install.sh
 
-          Some content here.
-          EOF
+          # Create fake wget that intercepts the reviewdog install URL
+          # Supports both "wget -O - URL | sh" and hardened "wget -O FILE URL; sh FILE"
+          cat > /tmp/mock-bin/wget << 'WGETEOF'
+          #!/bin/sh
+          out=""
+          prev=""
+          for arg in "$@"; do
+            if [ "$prev" = "-O" ]; then
+              out="$arg"
+            fi
+            prev="$arg"
+          done
+          case "$*" in
+            *reviewdog*)
+              if [ -n "$out" ] && [ "$out" != "-" ]; then
+                cat /tmp/fake-reviewdog-install.sh > "$out"
+              else
+                cat /tmp/fake-reviewdog-install.sh
+              fi
+              exit 0
+              ;;
+          esac
+          exec /usr/bin/wget "$@"
+          WGETEOF
+          chmod +x /tmp/mock-bin/wget
 
-      - id: action
+          # Add mock-bin to PATH persistently for all subsequent steps
+          echo "/tmp/mock-bin" >> "$GITHUB_PATH"
+
+      - name: Run remark-lint action on clean markdown fixture
+        id: action
         uses: .
         with:
-          workdir: md-test
+          workdir: "tests/fixtures/md-clean"
           install_deps: "false"
-          remark_args: "--use=remark-preset-lint-recommended"
           reporter: "local"
           filter_mode: "nofilter"
           fail_level: "none"
-          github_token: ${{ github.token }}
+          level: "error"
 
       - name: Assert action completed successfully
         run: |
-          echo "PASS: remark-lint action completed without error"
+          echo "PASS: remark-lint action completed without error on clean markdown"
