@@ -1,4 +1,4 @@
-name: Test custom tool_name and level inputs
+name: Test fail_level=none always exits 0
 on:
   workflow_dispatch:
 jobs:
@@ -55,18 +55,16 @@ jobs:
           chmod +x /tmp/fake-wget
           sudo cp /tmp/fake-wget /usr/local/bin/wget
 
-      - name: Run remark-lint with custom tool_name and warning level
+      - name: Run remark-lint with fail_level=none (should always exit 0)
         id: action
         uses: .
         with:
-          workdir: tests/fixtures/tool-name
-          tool_name: my-remark-linter
-          level: warning
+          workdir: tests/fixtures/fail-level
           reporter: github-check
           filter_mode: nofilter
           fail_level: none
           install_deps: "false"
 
-      - name: Assert action completed successfully with custom tool name
+      - name: Assert action exited 0 despite potential lint issues
         run: |
-          echo "PASS: remark-lint action with custom tool_name and level completed without error"
+          echo "PASS: remark-lint action with fail_level=none exited 0 as expected"

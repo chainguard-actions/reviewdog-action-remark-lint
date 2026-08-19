@@ -1,27 +1,73 @@
-name: Test basic remark-lint usage
+name: Test basic usage - valid markdown
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_REF: refs/heads/main
-      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - id: action
+      - name: Pre-install remark globally
+        run: |
+          npm install -g remark-cli@10.0.0 remark-preset-lint-recommended@6.0.1 remark-lint@9.0.1
+
+      - name: Set up fake reviewdog and wget mock
+        run: |
+          # Create a fake reviewdog binary that reads stdin and exits 0
+          printf '%s\n' '#!/bin/sh' 'cat > /dev/null' 'exit 0' > /tmp/fake-reviewdog
+          chmod +x /tmp/fake-reviewdog
+
+          # Create a fake install.sh that installs the fake reviewdog to the requested bindir
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'bindir="/tmp"' \
+            'while [ $# -gt 0 ]; do' \
+            '  case "$1" in' \
+            '    -b) bindir="$2"; shift 2 ;;' \
+            '    *) shift ;;' \
+            '  esac' \
+            'done' \
+            'cp /tmp/fake-reviewdog "$bindir/reviewdog"' \
+            'chmod +x "$bindir/reviewdog"' \
+            > /tmp/fake-install-reviewdog.sh
+          chmod +x /tmp/fake-install-reviewdog.sh
+
+          # Create a fake wget that intercepts reviewdog downloads
+          # Supports both "wget -O - URL | sh" and hardened "wget -O file URL && sh file"
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'out="-"' \
+            'prev=""' \
+            'for arg in "$@"; do' \
+            '  case "$prev" in' \
+            '    -O|--output-document) out="$arg" ;;' \
+            '  esac' \
+            '  prev="$arg"' \
+            'done' \
+            'case "$*" in' \
+            '  *reviewdog*)' \
+            '    if [ "$out" = "-" ]; then' \
+            '      cat /tmp/fake-install-reviewdog.sh' \
+            '    else' \
+            '      cat /tmp/fake-install-reviewdog.sh > "$out"' \
+            '    fi' \
+            '    exit 0' \
+            '    ;;' \
+            'esac' \
+            'exec /usr/bin/wget "$@"' \
+            > /tmp/fake-wget
+          chmod +x /tmp/fake-wget
+          sudo cp /tmp/fake-wget /usr/local/bin/wget
+
+      - name: Run remark-lint action on valid markdown
+        id: action
         uses: .
         with:
-          workdir: tests/fixtures/simple
-          reporter: local
+          workdir: tests/fixtures/basic
+          reporter: github-check
           filter_mode: nofilter
           fail_level: none
-          fail_on_error: "false"
           install_deps: "false"
-          remark_args: "--use=remark-preset-lint-recommended"
-        env:
-          INPUT_GITHUB_TOKEN: dummy-token
 
       - name: Assert action completed successfully
         run: |
