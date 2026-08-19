@@ -1,4 +1,4 @@
-name: Test basic usage - valid markdown
+name: Test install_deps=true with package.json
 on:
   workflow_dispatch:
 
@@ -8,14 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up fake remark, wget, and reviewdog
+      - name: Set up fake remark, wget, npm, and reviewdog
         run: |
           mkdir -p /tmp/fake-bin
 
           # Fake remark: outputs nothing (no lint issues), exits 0
           cat > /tmp/fake-bin/remark << 'REMARK_EOF'
           #!/bin/sh
-          # Fake remark-cli: no output means no lint issues
           exit 0
           REMARK_EOF
           chmod +x /tmp/fake-bin/remark
@@ -57,18 +56,40 @@ jobs:
           WGET_EOF
           chmod +x /tmp/fake-bin/wget
 
+          # Fake npm: intercept ls and install calls used by the entrypoint
+          cat > /tmp/fake-bin/npm << 'NPM_EOF'
+          #!/bin/sh
+          case "$1" in
+            install)
+              # No-op: pretend npm install succeeded (handles both 'npm install' and 'npm install -g ...')
+              exit 0
+              ;;
+            ls)
+              # Return output that looks like remark packages are installed globally
+              printf "remark-preset-lint-recommended@6.0.1\nremark-lint@9.0.1\n"
+              exit 0
+              ;;
+            *)
+              # For any other npm command (e.g. 'npm remark-lint --version'), return a version string
+              printf "9.0.1\n"
+              exit 0
+              ;;
+          esac
+          NPM_EOF
+          chmod +x /tmp/fake-bin/npm
+
           echo "/tmp/fake-bin" >> "$GITHUB_PATH"
 
       - id: action
         uses: .
         with:
-          workdir: tests/fixtures/valid
+          workdir: tests/fixtures/with-package-json
           reporter: github-check
           filter_mode: nofilter
           fail_level: none
-          install_deps: "false"
+          install_deps: "true"
 
-      - name: Assert action completed successfully
+      - name: Assert action completed with install_deps=true
         run: |
-          echo "Action completed without error"
+          echo "Action completed with install_deps=true and package.json present"
           echo "PASS"

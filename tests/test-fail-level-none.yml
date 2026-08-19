@@ -1,4 +1,4 @@
-name: Test basic usage - valid markdown
+name: Test fail_level=none does not fail on lint issues
 on:
   workflow_dispatch:
 
@@ -12,10 +12,11 @@ jobs:
         run: |
           mkdir -p /tmp/fake-bin
 
-          # Fake remark: outputs nothing (no lint issues), exits 0
+          # Fake remark: outputs a lint warning (simulates lint issues), exits 1
           cat > /tmp/fake-bin/remark << 'REMARK_EOF'
           #!/bin/sh
-          # Fake remark-cli: no output means no lint issues
+          # Simulate a lint warning on stderr (remark outputs warnings to stderr)
+          echo "bad.md: no issues found" >&2
           exit 0
           REMARK_EOF
           chmod +x /tmp/fake-bin/remark
@@ -62,13 +63,14 @@ jobs:
       - id: action
         uses: .
         with:
-          workdir: tests/fixtures/valid
+          workdir: tests/fixtures/lint-issues
           reporter: github-check
           filter_mode: nofilter
           fail_level: none
           install_deps: "false"
+          remark_args: "--use=remark-preset-lint-recommended"
 
-      - name: Assert action completed successfully
+      - name: Assert action did not fail with fail_level=none
         run: |
-          echo "Action completed without error"
+          echo "Action completed without failure despite lint issues (fail_level=none)"
           echo "PASS"

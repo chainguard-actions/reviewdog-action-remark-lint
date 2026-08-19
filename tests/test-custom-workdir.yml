@@ -1,4 +1,4 @@
-name: Test basic usage - valid markdown
+name: Test custom workdir input
 on:
   workflow_dispatch:
 
@@ -15,7 +15,6 @@ jobs:
           # Fake remark: outputs nothing (no lint issues), exits 0
           cat > /tmp/fake-bin/remark << 'REMARK_EOF'
           #!/bin/sh
-          # Fake remark-cli: no output means no lint issues
           exit 0
           REMARK_EOF
           chmod +x /tmp/fake-bin/remark
@@ -62,13 +61,13 @@ jobs:
       - id: action
         uses: .
         with:
-          workdir: tests/fixtures/valid
+          workdir: tests/fixtures/docs
           reporter: github-check
           filter_mode: nofilter
           fail_level: none
           install_deps: "false"
 
-      - name: Assert action completed successfully
+      - name: Assert action completed with custom workdir
         run: |
-          echo "Action completed without error"
+          echo "Action completed with custom workdir=tests/fixtures/docs"
           echo "PASS"

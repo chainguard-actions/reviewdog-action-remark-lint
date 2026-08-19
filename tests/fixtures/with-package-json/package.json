@@ -1,0 +1,9 @@
+{
+  "name": "test-install-deps",
+  "version": "1.0.0",
+  "remarkConfig": {
+    "plugins": [
+      "remark-preset-lint-recommended"
+    ]
+  }
+}
