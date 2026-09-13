@@ -1,0 +1,76 @@
+#!/bin/bash
+set -eu # Increase bash error strictness
+
+if [[ -n "${GITHUB_WORKSPACE}" ]]; then
+  cd "${GITHUB_WORKSPACE}/${INPUT_WORKDIR}" || exit
+fi
+
+export REVIEWDOG_GITHUB_API_TOKEN="${INPUT_GITHUB_TOKEN}"
+
+export REVIEWDOG_VERSION=v0.21.1
+
+echo "[action-remark-lint] Installing reviewdog..."
+INSTALL_SCRIPT="$(mktemp)"
+wget -O "${INSTALL_SCRIPT}" -q https://raw.githubusercontent.com/reviewdog/reviewdog/fd59714416d6d9a1c0692d872e38e7f8448df4fc/install.sh
+sh "${INSTALL_SCRIPT}" -b /tmp "${REVIEWDOG_VERSION}"
+rm -f "${INSTALL_SCRIPT}"
+
+# Install remark and remark-lint if not yet present
+if [[ "$(which remark)" == "" || "$(npm ls -g 2> /dev/null | grep remark-preset-lint-recommended)" == "" || "$(npm ls -g 2> /dev/null | grep remark-lint)" == "" ]]; then
+  npm install -g remark-cli@10.0.0 remark-preset-lint-recommended@6.0.1 remark-lint@9.0.1
+fi
+
+echo "[action-remark-lint] Versions: $(remark --version), remark-lint: $(npm remark-lint --version)"
+
+# Install plugins if package.sjon file is present
+if [[ "${INPUT_INSTALL_DEPS}" == "true" && -f "package.json" ]]; then
+  echo "[action-remark-lint] Installing npm dependencies..."
+  npm install
+
+  # Add default if `INPUT_REMARK_ARGS` is not set and no `remarkConfig` is found
+  if ! grep -q '"remarkConfig"' package.json; then
+    INPUT_REMARK_ARGS=${INPUT_REMARK_ARGS:=--use=remark-preset-lint-recommended}
+  fi
+fi
+
+# Add default value if `INPUT_REMARK_ARGS` is not set and no `.remarkrc*` config file is found
+if ! compgen -G .remarkrc* > /dev/null; then
+  INPUT_REMARK_ARGS=${INPUT_REMARK_ARGS:=--use=remark-preset-lint-recommended}
+fi
+
+# NOTE: ${VAR,,} Is bash 4.0 syntax to make strings lowercase.
+exit_val="0"
+echo "[action-remark-lint] Checking markdown code with the remark-lint linter and reviewdog..."
+
+# Tokenize INPUT_REMARK_ARGS into an array (quote-aware, handles spaces and quoted substrings)
+remark_args=()
+if [ -n "$INPUT_REMARK_ARGS" ]; then
+  while IFS= read -r -d '' t; do remark_args+=("$t"); done \
+    < <(printf '%s' "$INPUT_REMARK_ARGS" | xargs printf '%s\0')
+fi
+
+# Tokenize INPUT_REVIEWDOG_FLAGS into an array (quote-aware, handles spaces and quoted substrings)
+reviewdog_flags=()
+if [ -n "$INPUT_REVIEWDOG_FLAGS" ]; then
+  while IFS= read -r -d '' t; do reviewdog_flags+=("$t"); done \
+    < <(printf '%s' "$INPUT_REVIEWDOG_FLAGS" | xargs printf '%s\0')
+fi
+
+remark . "${remark_args[@]}" 2>&1 |
+  sed 's/\x1b\[[0-9;]*m//g' | # Removes ansi codes see https://github.com/reviewdog/errorformat/issues/51
+  /tmp/reviewdog -f=remark-lint \
+    -name="${INPUT_TOOL_NAME}" \
+    -reporter="${INPUT_REPORTER}" \
+    -filter-mode="${INPUT_FILTER_MODE}" \
+    -fail-level="${INPUT_FAIL_LEVEL}" \
+    -fail-on-error="${INPUT_FAIL_ON_ERROR}" \
+    -level="${INPUT_LEVEL}" \
+    -tee \
+    "${reviewdog_flags[@]}" || exit_val="$?"
+
+echo "[action-remark-lint] Clean up reviewdog..."
+rm /tmp/reviewdog
+
+if [[ "${exit_val}" -ne '0' ]]; then
+  exit 1
+fi
