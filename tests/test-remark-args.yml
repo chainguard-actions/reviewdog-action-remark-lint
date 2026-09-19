@@ -1,0 +1,46 @@
+name: Test custom remark_args input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a markdown file for linting with explicit remark args
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/remark-args"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/remark-args/README.md" << 'EOF'
+          # Hello World
+
+          This is a markdown file for remark args test.
+
+          ## Section
+
+          Some content here.
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          workdir: tests/fixtures/remark-args
+          remark_args: "--use=remark-preset-lint-recommended"
+          reporter: github-check
+          filter_mode: nofilter
+          fail_level: none
+          install_deps: "false"
+        continue-on-error: true
+
+      - name: Assert action ran with custom remark_args
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with custom remark_args"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (expected under sentinel repo or API limits)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

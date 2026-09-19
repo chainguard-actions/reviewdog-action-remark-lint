@@ -1,6 +1,11 @@
 {
   "owner": "reviewdog",
   "repo": "action-remark-lint",
-  "version": "",
-  "url": "https://github.com/reviewdog/action-remark-lint"
+  "version": "v5.20.0",
+  "commit_sha": "b59ae6b0c8764e8fe1b72541328b9a19f0f94ae0",
+  "url": "https://github.com/reviewdog/action-remark-lint",
+  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
+  "test_agent_version": "2",
+  "harden_agent_version": "2"
 }
