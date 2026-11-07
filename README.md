@@ -18,6 +18,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v5.18.0 | [`v5.18.0`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/tree/v5.18.0) | [`82225f7`](https://github.com/reviewdog/action-remark-lint/commit/82225f7db5b4a3caaca3052733b6800fa7d109b0) | [`HARDENING.md`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/blob/v5.18.0/HARDENING.md) |
 | v5.19.0 | [`v5.19.0`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/tree/v5.19.0) | [`7c4b1f5`](https://github.com/reviewdog/action-remark-lint/commit/7c4b1f5f1cf73b426e8b2c1921fb2888d84c55d5) | [`HARDENING.md`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/blob/v5.19.0/HARDENING.md) |
 | v5.20.0 | [`v5.20.0`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/tree/v5.20.0) | [`b59ae6b`](https://github.com/reviewdog/action-remark-lint/commit/b59ae6b0c8764e8fe1b72541328b9a19f0f94ae0) | [`HARDENING.md`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/blob/v5.20.0/HARDENING.md) |
+| v5.21.0 | [`v5.21.0`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/tree/v5.21.0) | [`6ba4dbc`](https://github.com/reviewdog/action-remark-lint/commit/6ba4dbc9bcae7c6b1527e87ae2cac51fd403031b) | [`HARDENING.md`](https://github.com/chainguard-actions/reviewdog-action-remark-lint/blob/v5.21.0/HARDENING.md) |
 
 ## Privacy
 
