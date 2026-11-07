@@ -1,0 +1,33 @@
+name: Test clean markdown passes
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          workdir: tests/fixtures/clean
+          reporter: local
+          filter_mode: nofilter
+          fail_level: any
+      - name: Assert success and reviewdog cleaned up
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected success"
+            exit 1
+          fi
+          if [ -e /tmp/reviewdog ]; then
+            echo "FAIL: /tmp/reviewdog should have been removed"
+            exit 1
+          fi
+          if ! command -v remark >/dev/null; then
+            echo "FAIL: remark not installed"
+            exit 1
+          fi
+          echo "PASS"
